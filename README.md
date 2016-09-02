@@ -8,8 +8,8 @@ sbt-cxf is a plugin for SBT that will generate java-classes for web-service WSDL
 Add the plugin in project/plugins.sbt:
 ```scala
 resolvers ++= Seq(
-	"Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
-	"Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
+  "Sonatype OSS Releases" at "http://oss.sonatype.org/content/repositories/releases/",
+  "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 )
 
 addSbtPlugin("com.solinor.sbt" % "sbt-cxf" % "1.0")
