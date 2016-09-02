@@ -15,9 +15,11 @@ resolvers ++= Seq(
 addSbtPlugin("com.solinor.sbt" % "sbt-cxf" % "1.0-SNAPSHOT")
 ```
 
+Add WSDL file (example HelloWorld.wsdl) to wsdl subdirectory under resources directory
+
 Add the plugin configuration in build.sbt:
 ```scala
 wsdls := Seq(
-  wsdls := Seq(Wsdl("HelloWorld", file("src/main/wsdl/HelloWorld.wsdl"), Nil)) // Example
+  Wsdl("HelloWorld", (resourceDirectory in Compile).value / "wsdl/HelloWorld.wsdl", Nil) // Example
 )
 ```
