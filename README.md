@@ -1,5 +1,5 @@
 sbt-cxf
-========
+=======
 
 sbt-cxf is a plugin for SBT that will generate java-classes for web-service WSDLs using Apache CXF. Find out more about [Apache CXF](http://cxf.apache.org/).
 
@@ -12,7 +12,7 @@ resolvers ++= Seq(
 	"Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 )
 
-addSbtPlugin("com.solinor.sbt" % "sbt-cxf" % "1.0-SNAPSHOT")
+addSbtPlugin("com.solinor.sbt" % "sbt-cxf" % "1.0")
 ```
 
 Add WSDL file (example HelloWorld.wsdl) to wsdl subdirectory under resources directory
