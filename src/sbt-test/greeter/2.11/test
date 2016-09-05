@@ -1,3 +1,3 @@
 > package
-$ exists target/scala-2.11/src_managed/main/cxf
+$ exists target/scala-2.11/src_managed/main
 $ exists target/scala-2.11/greeter_2.11-1.0.jar
