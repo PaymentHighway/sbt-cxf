@@ -14,61 +14,52 @@ object CxfPlugin extends AutoPlugin {
 
     val cxfVersion = SettingKey[String]("cxfVersion", "Use this version of cxf")
 
-    val wsdls = SettingKey[Seq[Wsdl]]("wsdls", "wsdls to generate java files from")
+    lazy val wsdls = SettingKey[Seq[Wsdl]]("wsdls", "wsdls to generate java files from")
 
-    val wsdl2java = TaskKey[Seq[File]]("wsdl2java", "Generates java files from wsdls")
-    val wsdl2javaDefaultArgs = SettingKey[Seq[String]]("wsdl2java default arguments")
+    lazy val wsdl2java = TaskKey[Seq[File]]("wsdl2java", "Generates java files from wsdls")
+    lazy val generate = TaskKey[Seq[File]]("wsdl2java-generate")
 
-    val useKeyAsPartOfOutputDirectory = SettingKey[Boolean]("wsdl2java use key for output directory")
+    lazy val defaultArgs = SettingKey[Seq[String]]("wsdl2java default arguments")
 
     case class Wsdl(key: String, file: File, args: Seq[String])
   }
 
-  override val trigger = allRequirements
+  override val trigger = noTrigger
   override val requires = sbt.plugins.IvyPlugin && sbt.plugins.JvmPlugin
 
   val autoImport = Import
 
   import autoImport._
 
-  override def projectSettings = Seq(
+  override def projectSettings: Seq[Def.Setting[_]] = Seq(
     ivyConfigurations += cxf,
-    cxfVersion := "3.1.7",
-    libraryDependencies <++= cxfVersion { version => Seq[ModuleID](
+
+    libraryDependencies <++= (cxfVersion in (Compile, wsdl2java)) { version => Seq[ModuleID](
       "org.apache.cxf" % "cxf-tools-wsdlto-core" % version % cxf,
       "org.apache.cxf" % "cxf-tools-wsdlto-databinding-jaxb" % version % cxf,
       "org.apache.cxf" % "cxf-tools-wsdlto-frontend-jaxws" % version % cxf
-    )},
-    wsdls := Nil,
+    )}
+  ) ++ inConfig(Compile)(baseProjectSettings)
+
+  lazy val baseProjectSettings = Seq(
+    wsdl2java := (generate in wsdl2java).value,
+    sourceManaged in wsdl2java <<= sourceManaged(_ / "cxf"),
+
     managedClasspath in wsdl2java <<= (classpathTypes in wsdl2java, update) map { (ct, report) =>
       Classpaths.managedJars(cxf, ct, report)
     },
-    sourceManaged in wsdl2java <<= sourceManaged(_ / "cxf"),
 
-    managedSourceDirectories in Compile <++= (
-      wsdls,
-      sourceManaged in wsdl2java,
-      useKeyAsPartOfOutputDirectory in wsdl2java
-    ) { (wsdls, basedir, useKey) =>
-      if (useKey) {
-        wsdls.map { wsdl => outputDirectory(basedir, wsdl.key) }
-      } else {
-        Seq(basedir)
-      }
-    },
-    wsdl2java <<= (
-      wsdls,
-      sourceManaged in wsdl2java,
-      managedClasspath in wsdl2java,
-      wsdl2javaDefaultArgs in wsdl2java,
-      useKeyAsPartOfOutputDirectory in wsdl2java,
-      streams in Compile
-    ) map { (wsdls, basedir, cp, defaultArgs, useKey, stream) =>
-      val classpath = cp.files
+    sourceGenerators += wsdl2java.taskValue
+  ) ++ inTask(wsdl2java)(Seq(
+    generate := {
+      val s = streams.value
 
-      if (!basedir.exists() || wsdls.exists(_.file.lastModified > basedir.lastModified())) {
+      val basedir = sourceManaged.value
+      val classpath = (managedClasspath in wsdl2java).value.files
+
+      if (wsdls.value.nonEmpty && (!basedir.exists() || wsdls.value.exists(_.file.lastModified > basedir.lastModified()))) {
         if (basedir.exists()) {
-          stream.log.info("Removing output directory...")
+          s.log.info("Removing output directory...")
           IO.delete(basedir)
         }
         IO.createDirectory(basedir)
@@ -83,17 +74,15 @@ object CxfPlugin extends AutoPlugin {
         try {
           Thread.currentThread.setContextClassLoader(classLoader)
 
-          wsdls.flatMap { wsdl =>
-            val output = if (useKey) outputDirectory(basedir, wsdl.key) else basedir
+          wsdls.value.flatMap { wsdl =>
+            val args = Seq("-d", basedir.getAbsolutePath) ++ (defaultArgs in wsdl2java).value ++ wsdl.args :+ wsdl.file.getAbsolutePath
+            callWsdl2java(wsdl.key, basedir, args, classpath, s.log)(WSDLToJava, ToolContext)
 
-            val args = Seq("-d", output.getAbsolutePath) ++ defaultArgs ++ wsdl.args :+ wsdl.file.getAbsolutePath
-            callWsdl2java(wsdl.key, output, args, classpath, stream.log)(WSDLToJava, ToolContext)
-
-            (output ** "*.java").get
+            (basedir ** "*.java").get
           }.distinct
         } catch { case e: Throwable =>
-          stream.log.error("Failed to compile wsdl with exception: " + e.getMessage)
-          stream.log.trace(e)
+          s.log.error("Failed to compile wsdl with exception: " + e.getMessage)
+          s.log.trace(e)
 
           (basedir ** "*.java").get
         } finally {
@@ -105,14 +94,15 @@ object CxfPlugin extends AutoPlugin {
         (basedir ** "*.java").get
       }
     },
-    wsdl2javaDefaultArgs := Seq("-exsh", "true", "-validate"),
 
-    sourceGenerators in Compile += wsdl2java.taskValue,
+    clean := IO.delete((sourceManaged.value ** "*").get),
 
-    useKeyAsPartOfOutputDirectory := false
-  )
+    cxfVersion := "3.1.7",
 
-  private def outputDirectory(basedir: File, key: String) = new File(basedir, key).getAbsoluteFile
+    wsdls := Nil,
+
+    defaultArgs := Seq("-exsh", "true", "-validate")
+  ))
 
   private def callWsdl2java(key: String, output: File, arguments: Seq[String], classpath: Seq[File], logger: Logger)(
     WSDLToJava: Class[_],
