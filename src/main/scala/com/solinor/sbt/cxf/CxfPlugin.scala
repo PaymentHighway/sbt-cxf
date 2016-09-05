@@ -42,7 +42,8 @@ object CxfPlugin extends AutoPlugin {
 
     wsdl2java := (generate in wsdl2java).value,
 
-    sourceManaged in (Compile, wsdl2java) <<= (sourceManaged in Compile) (_ / "cxf"),
+    // Enable this when IntelliJ IDEA does not threat it as part of namespace!
+    sourceManaged in cxf <<= (sourceManaged in Compile), // (_ / "cxf")
 
     managedClasspath in wsdl2java <<= (classpathTypes in wsdl2java, update) map { (ct, report) =>
       Classpaths.managedJars(cxf, ct, report)
@@ -55,7 +56,7 @@ object CxfPlugin extends AutoPlugin {
     generate := {
       val s = streams.value
 
-      val basedir = (sourceManaged in Compile).value
+      val basedir = (sourceManaged in cxf).value
       val classpath = (managedClasspath in wsdl2java).value.files
 
       if (wsdls.value.nonEmpty && (!basedir.exists() || wsdls.value.exists(_.file.lastModified > basedir.lastModified()))) {
