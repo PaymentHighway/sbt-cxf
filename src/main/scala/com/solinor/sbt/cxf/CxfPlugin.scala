@@ -12,8 +12,6 @@ object CxfPlugin extends AutoPlugin {
   object Import {
     val cxf = config("cxf").hide
 
-    val cxfVersion = SettingKey[String]("cxfVersion", "Use this version of cxf")
-
     lazy val wsdls = SettingKey[Seq[Wsdl]]("wsdls", "wsdls to generate java files from")
 
     lazy val wsdl2java = TaskKey[Seq[File]]("wsdl2java", "Generates java files from wsdls")
@@ -31,36 +29,39 @@ object CxfPlugin extends AutoPlugin {
 
   import autoImport._
 
-  override def projectSettings: Seq[Def.Setting[_]] = Seq(
+  override def projectSettings: Seq[Def.Setting[_]] = baseProjectSettings
+
+  lazy val baseProjectSettings = Seq(
     ivyConfigurations += cxf,
 
-    libraryDependencies <++= (cxfVersion in (Compile, wsdl2java)) { version => Seq[ModuleID](
+    libraryDependencies <++= (version in cxf) { version => Seq[ModuleID](
       "org.apache.cxf" % "cxf-tools-wsdlto-core" % version % cxf,
       "org.apache.cxf" % "cxf-tools-wsdlto-databinding-jaxb" % version % cxf,
       "org.apache.cxf" % "cxf-tools-wsdlto-frontend-jaxws" % version % cxf
-    )}
-  ) ++ inConfig(Compile)(baseProjectSettings)
+    )},
 
-  lazy val baseProjectSettings = Seq(
     wsdl2java := (generate in wsdl2java).value,
-    sourceManaged in wsdl2java <<= sourceManaged(_ / "cxf"),
+
+    sourceManaged in (Compile, wsdl2java) <<= (sourceManaged in Compile) (_ / "cxf"),
 
     managedClasspath in wsdl2java <<= (classpathTypes in wsdl2java, update) map { (ct, report) =>
       Classpaths.managedJars(cxf, ct, report)
     },
 
-    sourceGenerators += wsdl2java.taskValue
+    version in cxf := "3.1.7",
+
+    sourceGenerators in Compile += wsdl2java.taskValue
   ) ++ inTask(wsdl2java)(Seq(
     generate := {
       val s = streams.value
 
-      val basedir = sourceManaged.value
+      val basedir = (sourceManaged in Compile).value
       val classpath = (managedClasspath in wsdl2java).value.files
 
       if (wsdls.value.nonEmpty && (!basedir.exists() || wsdls.value.exists(_.file.lastModified > basedir.lastModified()))) {
         if (basedir.exists()) {
           s.log.info("Removing output directory...")
-          IO.delete(basedir)
+          clean.value
         }
         IO.createDirectory(basedir)
 
@@ -96,8 +97,6 @@ object CxfPlugin extends AutoPlugin {
     },
 
     clean := IO.delete((sourceManaged.value ** "*").get),
-
-    cxfVersion := "3.1.7",
 
     wsdls := Nil,
 

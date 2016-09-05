@@ -23,11 +23,11 @@ enablePlugins(com.solinor.sbt.cxf.CxfPlugin)
 
 val CxfVersion = "3.1.7"
 
-cxfVersion in (Compile, wsdl2java) := CxfVersion
+version in cxf := CxfVersion
 
-defaultArgs in (Compile, wsdl2java) := Seq("-exsh", "true", "-validate") // If this is acceptable, this can be omitted
+defaultArgs in wsdl2java := Seq("-exsh", "true", "-validate") // If this is acceptable, this can be omitted
 
-wsdls in (Compile, wsdl2java) := Seq(
+wsdls in wsdl2java := Seq(
   Wsdl("HelloWorld", (resourceDirectory in Compile).value / "wsdl/HelloWorld.wsdl", Nil)
 )
 ```
