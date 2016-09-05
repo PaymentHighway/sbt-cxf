@@ -25,7 +25,7 @@ val CxfVersion = "3.1.7"
 
 cxfVersion in (Compile, wsdl2java) := CxfVersion
 
-defaultArgs in (Compile, wsdl2java) := Seq("-exsh", "true", "-validate") // If this is accepated, this can be omitted
+defaultArgs in (Compile, wsdl2java) := Seq("-exsh", "true", "-validate") // If this is acceptable, this can be omitted
 
 wsdls in (Compile, wsdl2java) := Seq(
   Wsdl("HelloWorld", (resourceDirectory in Compile).value / "wsdl/HelloWorld.wsdl", Nil)
