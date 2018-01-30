@@ -42,7 +42,7 @@ object CxfPlugin extends AutoPlugin {
     wsdl2java := (generate in wsdl2java).value,
 
     // Enable this when IntelliJ IDEA does not threat it as part of namespace!
-    sourceManaged in cxf := (sourceManaged in Compile).value,
+    sourceManaged in wsdl2java := (sourceManaged in Compile).value / "cxf",
 
     managedClasspath in wsdl2java := {
       Classpaths.managedJars(cxf, (classpathTypes in wsdl2java).value, update.value)
@@ -55,16 +55,16 @@ object CxfPlugin extends AutoPlugin {
     generate := Def.taskDyn {
       val s = streams.value
 
-      val basedir = (sourceManaged in cxf).value
-      val classpath = (managedClasspath in wsdl2java).value.files
+      val basedir = sourceManaged.value
+      val classpath = managedClasspath.value.files
 
-      val dynClean: Unit = clean.value
+      val wsdlFiles = wsdls.value
 
       Def.task {
-        if (wsdls.value.nonEmpty && (!basedir.exists() || wsdls.value.exists(_.file.lastModified > basedir.lastModified()))) {
+        if (wsdlFiles.nonEmpty && (!basedir.exists() || wsdlFiles.exists(_.file.lastModified() > basedir.lastModified()))) {
           if (basedir.exists()) {
             s.log.info("Removing output directory...")
-            dynClean
+            IO.delete(basedir)
           }
           IO.createDirectory(basedir)
 
@@ -78,7 +78,7 @@ object CxfPlugin extends AutoPlugin {
           try {
             Thread.currentThread.setContextClassLoader(classLoader)
 
-            wsdls.value.flatMap { wsdl =>
+            wsdlFiles.flatMap { wsdl =>
               val args = Seq("-d", basedir.getAbsolutePath) ++ (defaultArgs in wsdl2java).value ++ wsdl.args :+ wsdl.file.getAbsolutePath
               callWsdl2java(wsdl.key, basedir, args, classpath, s.log)(WSDLToJava, ToolContext)
 
@@ -101,7 +101,7 @@ object CxfPlugin extends AutoPlugin {
       }
     }.value,
 
-    clean := IO.delete((sourceManaged.value ** "*").get),
+    clean := IO.delete(sourceManaged.value),
 
     wsdls := Nil,
 
