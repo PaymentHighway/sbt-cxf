@@ -1,10 +1,9 @@
-package com.solinor.sbt.cxf
+package io.paymenthighway.sbt.cxf
 
 import java.io.File
 import java.net.URLClassLoader
 
 import sbt.Keys._
-import sbt.classpath.ClasspathUtilities
 import sbt.{SettingKey, TaskKey, _}
 
 object CxfPlugin extends AutoPlugin {
@@ -25,77 +24,82 @@ object CxfPlugin extends AutoPlugin {
   override val trigger = noTrigger
   override val requires = sbt.plugins.IvyPlugin && sbt.plugins.JvmPlugin
 
-  val autoImport = Import
+  val autoImport: Import.type = Import
 
   import autoImport._
 
   override def projectSettings: Seq[Def.Setting[_]] = baseProjectSettings
 
-  lazy val baseProjectSettings = Seq(
+  lazy val baseProjectSettings: Seq[Def.Setting[_]] = Seq(
     ivyConfigurations += cxf,
 
-    libraryDependencies <++= (version in cxf) { version => Seq[ModuleID](
-      "org.apache.cxf" % "cxf-tools-wsdlto-core" % version % cxf,
-      "org.apache.cxf" % "cxf-tools-wsdlto-databinding-jaxb" % version % cxf,
-      "org.apache.cxf" % "cxf-tools-wsdlto-frontend-jaxws" % version % cxf
-    )},
+    libraryDependencies ++= Seq(
+      "org.apache.cxf" % "cxf-tools-wsdlto-core" % (version in cxf).value % cxf,
+      "org.apache.cxf" % "cxf-tools-wsdlto-databinding-jaxb" % (version in cxf).value % cxf,
+      "org.apache.cxf" % "cxf-tools-wsdlto-frontend-jaxws" % (version in cxf).value % cxf
+    ),
 
     wsdl2java := (generate in wsdl2java).value,
 
     // Enable this when IntelliJ IDEA does not threat it as part of namespace!
-    sourceManaged in cxf <<= (sourceManaged in Compile), // (_ / "cxf")
+    sourceManaged in cxf := (sourceManaged in Compile).value,
 
-    managedClasspath in wsdl2java <<= (classpathTypes in wsdl2java, update) map { (ct, report) =>
-      Classpaths.managedJars(cxf, ct, report)
+    managedClasspath in wsdl2java := {
+      Classpaths.managedJars(cxf, (classpathTypes in wsdl2java).value, update.value)
     },
 
-    version in cxf := "3.1.7",
+    version in cxf := "3.1.14",
 
     sourceGenerators in Compile += wsdl2java.taskValue
   ) ++ inTask(wsdl2java)(Seq(
-    generate := {
+    generate := Def.taskDyn {
       val s = streams.value
 
       val basedir = (sourceManaged in cxf).value
       val classpath = (managedClasspath in wsdl2java).value.files
 
-      if (wsdls.value.nonEmpty && (!basedir.exists() || wsdls.value.exists(_.file.lastModified > basedir.lastModified()))) {
-        if (basedir.exists()) {
-          s.log.info("Removing output directory...")
-          clean.value
-        }
-        IO.createDirectory(basedir)
+      val dynClean: Unit = clean.value
 
-        val classLoader = ClasspathUtilities.toLoader(classpath).asInstanceOf[URLClassLoader]
+      Def.task {
+        if (wsdls.value.nonEmpty && (!basedir.exists() || wsdls.value.exists(_.file.lastModified > basedir.lastModified()))) {
+          if (basedir.exists()) {
+            s.log.info("Removing output directory...")
+            dynClean
+          }
+          IO.createDirectory(basedir)
 
-        val WSDLToJava = classLoader.loadClass("org.apache.cxf.tools.wsdlto.WSDLToJava")
-        val ToolContext = classLoader.loadClass("org.apache.cxf.tools.common.ToolContext")
+          val classLoader = new URLClassLoader(Path.toURLs(classpath), getClass.getClassLoader)
 
-        val oldContextClassLoader = Thread.currentThread.getContextClassLoader
+          val WSDLToJava = classLoader.loadClass("org.apache.cxf.tools.wsdlto.WSDLToJava")
+          val ToolContext = classLoader.loadClass("org.apache.cxf.tools.common.ToolContext")
 
-        try {
-          Thread.currentThread.setContextClassLoader(classLoader)
+          val oldContextClassLoader = Thread.currentThread.getContextClassLoader
 
-          wsdls.value.flatMap { wsdl =>
-            val args = Seq("-d", basedir.getAbsolutePath) ++ (defaultArgs in wsdl2java).value ++ wsdl.args :+ wsdl.file.getAbsolutePath
-            callWsdl2java(wsdl.key, basedir, args, classpath, s.log)(WSDLToJava, ToolContext)
+          try {
+            Thread.currentThread.setContextClassLoader(classLoader)
 
-            (basedir ** "*.java").get
-          }.distinct
-        } catch { case e: Throwable =>
-          s.log.error("Failed to compile wsdl with exception: " + e.getMessage)
-          s.log.trace(e)
+            wsdls.value.flatMap { wsdl =>
+              val args = Seq("-d", basedir.getAbsolutePath) ++ (defaultArgs in wsdl2java).value ++ wsdl.args :+ wsdl.file.getAbsolutePath
+              callWsdl2java(wsdl.key, basedir, args, classpath, s.log)(WSDLToJava, ToolContext)
 
+              (basedir ** "*.java").get
+            }.distinct
+          } catch {
+            case e: Throwable =>
+              s.log.error("Failed to compile wsdl with exception: " + e.getMessage)
+              s.log.trace(e)
+
+              (basedir ** "*.java").get
+          } finally {
+            Thread.currentThread.setContextClassLoader(oldContextClassLoader)
+
+            classLoader.close()
+          }
+        } else {
           (basedir ** "*.java").get
-        } finally {
-          Thread.currentThread.setContextClassLoader(oldContextClassLoader)
-
-          classLoader.close()
         }
-      } else {
-        (basedir ** "*.java").get
       }
-    },
+    }.value,
 
     clean := IO.delete((sourceManaged.value ** "*").get),
 

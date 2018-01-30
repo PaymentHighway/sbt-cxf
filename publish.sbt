@@ -1,10 +1,11 @@
 credentials += Credentials(Path.userHome / ".sbt" / "sonatype-credentials")
 
-publishTo <<= version { version: String =>
-  if (version.trim.endsWith("SNAPSHOT")) {
-    Some("Sonatype Nexus Snapshots" at "https://oss.sonatype.org/content/repositories/snapshots")
+publishTo := {
+  val nexus = "https://oss.sonatype.org/"
+  if (isSnapshot.value) {
+    Some("Sonatype Nexus Snapshots" at s"${nexus}content/repositories/snapshots")
   } else {
-    Some("Sonatype Nexus Staging" at "https://oss.sonatype.org/service/local/staging/deploy/maven2")
+    Some("Sonatype Nexus Staging" at s"${nexus}service/local/staging/deploy/maven2")
   }
 }
 

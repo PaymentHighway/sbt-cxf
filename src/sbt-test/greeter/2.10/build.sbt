@@ -4,9 +4,9 @@ scalaVersion := "2.11.8"
 
 version := "1.0"
 
-enablePlugins(com.solinor.sbt.cxf.CxfPlugin)
+enablePlugins(io.paymenthighway.sbt.cxf.CxfPlugin)
 
-val CxfVersion = "3.1.7"
+val CxfVersion = "3.1.14"
 
 version in cxf := CxfVersion
 

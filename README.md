@@ -12,16 +12,16 @@ resolvers ++= Seq(
   "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 )
 
-addSbtPlugin("com.solinor.sbt" % "sbt-cxf" % "1.1-SNAPSHOT")
+addSbtPlugin("io.paymenthighway.sbt" % "sbt-cxf" % "1.1-SNAPSHOT")
 ```
 
 Add WSDL file (example HelloWorld.wsdl) to wsdl subdirectory under resources directory
 
 Add the plugin configuration in build.sbt:
 ```scala
-enablePlugins(com.solinor.sbt.cxf.CxfPlugin)
+enablePlugins(io.paymenthighway.sbt.cxf.CxfPlugin)
 
-val CxfVersion = "3.1.7"
+val CxfVersion = "3.1.14"
 
 version in cxf := CxfVersion
 
