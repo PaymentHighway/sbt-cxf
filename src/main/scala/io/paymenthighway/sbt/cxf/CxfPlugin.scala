@@ -9,7 +9,7 @@ import sbt.{SettingKey, TaskKey, _}
 object CxfPlugin extends AutoPlugin {
 
   object Import {
-    val cxf = config("cxf").hide
+    val CXF = config("CXF").hide
 
     lazy val wsdls = SettingKey[Seq[Wsdl]]("wsdls", "wsdls to generate java files from")
 
@@ -31,12 +31,12 @@ object CxfPlugin extends AutoPlugin {
   override def projectSettings: Seq[Def.Setting[_]] = baseProjectSettings
 
   lazy val baseProjectSettings: Seq[Def.Setting[_]] = Seq(
-    ivyConfigurations += cxf,
+    ivyConfigurations += CXF,
 
     libraryDependencies ++= Seq(
-      "org.apache.cxf" % "cxf-tools-wsdlto-core" % (version in cxf).value % cxf,
-      "org.apache.cxf" % "cxf-tools-wsdlto-databinding-jaxb" % (version in cxf).value % cxf,
-      "org.apache.cxf" % "cxf-tools-wsdlto-frontend-jaxws" % (version in cxf).value % cxf
+      "org.apache.cxf" % "cxf-tools-wsdlto-core" % (version in CXF).value % CXF,
+      "org.apache.cxf" % "cxf-tools-wsdlto-databinding-jaxb" % (version in CXF).value % CXF,
+      "org.apache.cxf" % "cxf-tools-wsdlto-frontend-jaxws" % (version in CXF).value % CXF
     ),
 
     wsdl2java := (generate in wsdl2java).value,
@@ -45,10 +45,10 @@ object CxfPlugin extends AutoPlugin {
     sourceManaged in wsdl2java := (sourceManaged in Compile).value / "cxf",
 
     managedClasspath in wsdl2java := {
-      Classpaths.managedJars(cxf, (classpathTypes in wsdl2java).value, update.value)
+      Classpaths.managedJars(CXF, (classpathTypes in wsdl2java).value, update.value)
     },
 
-    version in cxf := "3.1.14",
+    version in CXF := "3.1.14",
 
     sourceGenerators in Compile += wsdl2java.taskValue
   ) ++ inTask(wsdl2java)(Seq(

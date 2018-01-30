@@ -12,7 +12,7 @@ resolvers ++= Seq(
   "Sonatype OSS Snapshots" at "http://oss.sonatype.org/content/repositories/snapshots/"
 )
 
-addSbtPlugin("io.paymenthighway.sbt" % "sbt-cxf" % "1.1-SNAPSHOT")
+addSbtPlugin("io.paymenthighway.sbt" % "sbt-cxf" % "1.4")
 ```
 
 Add WSDL file (example HelloWorld.wsdl) to wsdl subdirectory under resources directory
@@ -23,7 +23,7 @@ enablePlugins(io.paymenthighway.sbt.cxf.CxfPlugin)
 
 val CxfVersion = "3.1.14"
 
-version in cxf := CxfVersion
+version in CXF := CxfVersion
 
 defaultArgs in wsdl2java := Seq("-exsh", "true", "-validate") // If this is acceptable, this can be omitted
 
