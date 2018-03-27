@@ -9,7 +9,7 @@ organization := "io.paymenthighway.sbt"
 organizationName := "Payment Highway Oy"
 organizationHomepage := Some(url("https://paymenthighway.fi/en/"))
 
-crossSbtVersions := Vector("0.13.16", "1.1.0")
+crossSbtVersions := Vector("0.13.17", "1.1.2")
 
 developers := List(
   Developer("margussipria", "Margus Sipria", "margus+sbt-cxf@sipria.fi", url("https://github.com/margussipria"))
@@ -30,4 +30,4 @@ scalacOptions ++= Seq(
   "-Xfatal-warnings"
 )
 
-scalaVersion := "2.10.6"
+scalaVersion := "2.12.5"

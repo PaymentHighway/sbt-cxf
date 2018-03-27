@@ -48,7 +48,7 @@ object CxfPlugin extends AutoPlugin {
       Classpaths.managedJars(CXF, (classpathTypes in wsdl2java).value, update.value)
     },
 
-    version in CXF := "3.1.14",
+    version in CXF := "3.2.4",
 
     sourceGenerators in Compile += wsdl2java.taskValue
   ) ++ inTask(wsdl2java)(Seq(

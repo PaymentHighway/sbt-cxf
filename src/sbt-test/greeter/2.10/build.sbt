@@ -4,11 +4,11 @@ scalaVersion := "2.11.8"
 
 version := "1.0"
 
-enablePlugins(io.paymenthighway.sbt.cxf.CxfPlugin)
+enablePlugins(CxfPlugin)
 
 val CxfVersion = "3.1.14"
 
-version in cxf := CxfVersion
+version in CXF := CxfVersion
 
 defaultArgs in wsdl2java := Seq("-exsh", "true", "-validate")
 
