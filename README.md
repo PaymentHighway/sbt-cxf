@@ -1,6 +1,8 @@
 sbt-cxf
 =======
 
+[![][Build Status img]][Build Status]
+
 sbt-cxf is a plugin for SBT that will generate java-classes for web-service WSDLs using Apache CXF. Find out more about [Apache CXF](http://cxf.apache.org/).
 
 ## How to use
@@ -31,3 +33,6 @@ cxfDefaultArgs := Seq(
   Wsdl("HelloWorld", (resourceDirectory in Compile).value / "wsdl/HelloWorld.wsdl", Nil)
 )
 ```
+
+[Build Status]:https://travis-ci.org/PaymentHighway/sbt-cxf
+[Build Status img]:https://travis-ci.org/PaymentHighway/sbt-cxf.svg?branch=master
