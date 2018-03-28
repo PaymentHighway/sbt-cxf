@@ -1,0 +1,21 @@
+> package
+
+$ exists target/scala-2.11/src_managed/main/cxf
+
+$ exists target/scala-2.11/src_managed/main/cxf/org/apache/hello_world_soap_http/SOAPService.java
+$ exists target/scala-2.11/src_managed/main/cxf/org/apache/hello_world_soap_http/Greeter.java
+
+$ exists target/scala-2.11/classes/org/apache/hello_world_soap_http/Greeter.class
+$ exists target/scala-2.11/classes/org/apache/hello_world_soap_http/SOAPService.class
+
+$ exists target/scala-2.11/greeter_2.11-1.0.jar
+
+> test:compile
+
+$ absent target/scala-2.11/src_managed/test/cxf
+
+$ absent target/scala-2.11/src_managed/test/cxf/org/apache/hello_world_soap_http/SOAPService.java
+$ absent target/scala-2.11/src_managed/test/cxf/org/apache/hello_world_soap_http/Greeter.java
+
+$ absent target/scala-2.11/test-classes/org/apache/hello_world_soap_http/Greeter.class
+$ absent target/scala-2.11/test-classes/org/apache/hello_world_soap_http/SOAPService.class

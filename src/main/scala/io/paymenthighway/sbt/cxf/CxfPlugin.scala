@@ -11,12 +11,10 @@ object CxfPlugin extends AutoPlugin {
   object Import {
     val CXF = config("CXF").hide
 
-    lazy val wsdls = SettingKey[Seq[Wsdl]]("wsdls", "wsdls to generate java files from")
+    lazy val cxfDefaultArgs = SettingKey[Seq[String]]("wsdl2java default arguments")
+    lazy val cxfWSDLs = SettingKey[Seq[Wsdl]]("wsdl-list", "WSDLs to generate java files from")
 
-    lazy val wsdl2java = TaskKey[Seq[File]]("wsdl2java", "Generates java files from wsdls")
-    lazy val generate = TaskKey[Seq[File]]("wsdl2java-generate")
-
-    lazy val defaultArgs = SettingKey[Seq[String]]("wsdl2java default arguments")
+    lazy val cxfGenerate = TaskKey[Seq[File]]("run wsdl2java")
 
     case class Wsdl(key: String, file: File, args: Seq[String])
   }
@@ -39,26 +37,33 @@ object CxfPlugin extends AutoPlugin {
       "org.apache.cxf" % "cxf-tools-wsdlto-frontend-jaxws" % (version in CXF).value % CXF
     ),
 
-    wsdl2java := (generate in wsdl2java).value,
+    cxfWSDLs := Nil,
+    cxfDefaultArgs := Seq("-exsh", "true", "-validate"),
 
-    // Enable this when IntelliJ IDEA does not threat it as part of namespace!
-    sourceManaged in wsdl2java := (sourceManaged in Compile).value / "cxf",
+    // Test resources must be manually defined
+    cxfWSDLs in Test := Nil,
+    cxfDefaultArgs in Test := Seq("-exsh", "true", "-validate"),
 
-    managedClasspath in wsdl2java := {
-      Classpaths.managedJars(CXF, (classpathTypes in wsdl2java).value, update.value)
+    managedClasspath in CXF := {
+      Classpaths.managedJars(CXF, (classpathTypes in CXF).value, update.value)
     },
 
     version in CXF := "3.2.4",
 
-    sourceGenerators in Compile += wsdl2java.taskValue
-  ) ++ inTask(wsdl2java)(Seq(
-    generate := Def.taskDyn {
+    sourceGenerators in Compile += (cxfGenerate in Compile).taskValue,
+    sourceGenerators in Test += (cxfGenerate in Test).taskValue
+  ) ++
+    inConfig(Compile)(settings) ++
+    inConfig(Test)(settings)
+
+  private val settings = Seq(
+    cxfGenerate := Def.taskDyn {
       val s = streams.value
 
-      val basedir = sourceManaged.value
-      val classpath = managedClasspath.value.files
+      val basedir = sourceManaged.value / "cxf"
+      val classpath = (managedClasspath in CXF).value.files
 
-      val wsdlFiles = wsdls.value
+      val wsdlFiles = cxfWSDLs.value
 
       Def.task {
         if (wsdlFiles.nonEmpty && (!basedir.exists() || wsdlFiles.exists(_.file.lastModified() > basedir.lastModified()))) {
@@ -79,7 +84,7 @@ object CxfPlugin extends AutoPlugin {
             Thread.currentThread.setContextClassLoader(classLoader)
 
             wsdlFiles.flatMap { wsdl =>
-              val args = Seq("-d", basedir.getAbsolutePath) ++ (defaultArgs in wsdl2java).value ++ wsdl.args :+ wsdl.file.getAbsolutePath
+              val args = Seq("-d", basedir.getAbsolutePath) ++ cxfDefaultArgs.value ++ wsdl.args :+ wsdl.file.getAbsolutePath
               callWsdl2java(wsdl.key, basedir, args, classpath, s.log)(WSDLToJava, ToolContext)
 
               (basedir ** "*.java").get
@@ -101,12 +106,8 @@ object CxfPlugin extends AutoPlugin {
       }
     }.value,
 
-    clean := IO.delete(sourceManaged.value),
-
-    wsdls := Nil,
-
-    defaultArgs := Seq("-exsh", "true", "-validate")
-  ))
+    clean in CXF := IO.delete(sourceManaged.value / "cxf")
+  )
 
   private def callWsdl2java(key: String, output: File, arguments: Seq[String], classpath: Seq[File], logger: Logger)(
     WSDLToJava: Class[_],

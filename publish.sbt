@@ -8,5 +8,3 @@ publishTo := {
     Some("Sonatype Nexus Staging" at s"${nexus}service/local/staging/deploy/maven2")
   }
 }
-
-useGpg := true

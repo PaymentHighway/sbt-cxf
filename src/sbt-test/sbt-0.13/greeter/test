@@ -1,4 +1,5 @@
 > package
+
 $ exists target/scala-2.11/src_managed/main/cxf
 
 $ exists target/scala-2.11/src_managed/main/cxf/org/apache/hello_world_soap_http/SOAPService.java
