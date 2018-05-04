@@ -29,7 +29,7 @@ version in CXF := CxfVersion
 
 cxfDefaultArgs := Seq("-exsh", "true", "-validate") // If this is acceptable, this can be omitted
 
-cxfDefaultArgs := Seq(
+cxfWSDLs := Seq(
   Wsdl("HelloWorld", (resourceDirectory in Compile).value / "wsdl/HelloWorld.wsdl", Nil)
 )
 ```
