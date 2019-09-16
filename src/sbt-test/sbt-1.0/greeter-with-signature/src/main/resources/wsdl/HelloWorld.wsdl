@@ -2,6 +2,7 @@
 <!-- http://cxf.apache.org/docs/developing-a-consumer.html -->
 <wsdl:definitions name="HelloWorld" targetNamespace="http://apache.org/hello_world_soap_http"
                   xmlns="http://schemas.xmlsoap.org/wsdl/"
+                  xmlns:ds="http://www.w3.org/2000/09/xmldsig#"
                   xmlns:soap="http://schemas.xmlsoap.org/wsdl/soap/"
                   xmlns:tns="http://apache.org/hello_world_soap_http"
                   xmlns:x1="http://apache.org/hello_world_soap_http/types"
@@ -11,6 +12,9 @@
             xmlns="http://www.w3.org/2001/XMLSchema"
             xmlns:tns="http://apache.org/hello_world_soap_http/types"
             elementFormDefault="qualified">
+
+      <import namespace="http://www.w3.org/2000/09/xmldsig#" schemaLocation="xmldsig-core-schema.xsd"/>
+
       <simpleType name="MyStringType">
         <restriction base="string">
           <maxLength value="30" />
@@ -18,12 +22,17 @@
       </simpleType>
 
       <element name="sayHi">
-        <complexType/>
+        <complexType>
+          <sequence>
+            <element ref="ds:Signature" minOccurs="0" />
+          </sequence>
+        </complexType>
       </element>
       <element name="sayHiResponse">
         <complexType>
           <sequence>
             <element name="responseType" type="string"/>
+            <element ref="ds:Signature" minOccurs="0" />
           </sequence>
         </complexType>
       </element>
@@ -31,6 +40,7 @@
         <complexType>
           <sequence>
             <element name="requestType" type="tns:MyStringType"/>
+            <element ref="ds:Signature" minOccurs="0" />
           </sequence>
         </complexType>
       </element>
@@ -38,6 +48,7 @@
         <complexType>
           <sequence>
             <element name="responseType" type="string"/>
+            <element ref="ds:Signature" minOccurs="0" />
           </sequence>
         </complexType>
       </element>
@@ -45,14 +56,23 @@
         <complexType>
           <sequence>
             <element name="requestType" type="string"/>
+            <element ref="ds:Signature" minOccurs="0" />
           </sequence>
         </complexType>
       </element>
       <element name="pingMe">
-        <complexType/>
+        <complexType>
+          <sequence>
+            <element ref="ds:Signature" minOccurs="0" />
+          </sequence>
+        </complexType>
       </element>
       <element name="pingMeResponse">
-        <complexType/>
+        <complexType>
+          <sequence>
+            <element ref="ds:Signature" minOccurs="0" />
+          </sequence>
+        </complexType>
       </element>
       <element name="faultDetail">
         <complexType>

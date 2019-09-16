@@ -1,0 +1,7 @@
+<bindings xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns="http://java.sun.com/xml/ns/jaxb" version="2.1">
+    <bindings schemaLocation="xmldsig-core-schema.xsd" version="1.0" node="/xsd:schema">
+        <schemaBindings>
+            <package name="org.apache.xml.security.binding.xmldsig"/>
+        </schemaBindings>
+    </bindings>
+</bindings>

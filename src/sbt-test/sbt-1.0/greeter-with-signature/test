@@ -1,0 +1,25 @@
+> package
+
+$ exists target/scala-2.13/cxf/main
+
+$ exists target/scala-2.13/cxf/main/org/apache/hello_world_soap_http/SOAPService.java
+$ exists target/scala-2.13/cxf/main/org/apache/hello_world_soap_http/Greeter.java
+$ absent target/scala-2.13/cxf/main/org/apache/xml/security/binding/xmldsig/SignatureType.java
+$ exists target/scala-2.13/cxf/main/org/apache/xml/security/binding/xmldsig
+
+$ exists target/scala-2.13/classes/org/apache/hello_world_soap_http/Greeter.class
+$ exists target/scala-2.13/classes/org/apache/hello_world_soap_http/SOAPService.class
+$ absent target/scala-2.13/classes/org/apache/xml/security/binding/xmldsig/SignedInfoType.class
+$ absent target/scala-2.13/classes/org/apache/xml/security/binding/xmldsig
+
+$ exists target/scala-2.13/greeter_2.13-1.0.jar
+
+> test:compile
+
+$ absent target/scala-2.13/cxf/test
+
+$ absent target/scala-2.13/cxf/test/org/apache/hello_world_soap_http/SOAPService.java
+$ absent target/scala-2.13/cxf/test/org/apache/hello_world_soap_http/Greeter.java
+
+$ absent target/scala-2.13/test-classes/org/apache/hello_world_soap_http/Greeter.class
+$ absent target/scala-2.13/test-classes/org/apache/hello_world_soap_http/SOAPService.class
