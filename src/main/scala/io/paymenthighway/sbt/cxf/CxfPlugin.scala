@@ -5,18 +5,18 @@ import java.net.URLClassLoader
 
 import sbt.Keys._
 import sbt.io.{FileFilter, SimpleFileFilter}
-import sbt.{SettingKey, TaskKey, file, _}
+import sbt.{SettingKey, TaskKey, _}
 
 object CxfPlugin extends AutoPlugin {
 
   object Import {
     val CXF = config("CXF").hide
 
-    lazy val cxfDefaultArgs = SettingKey[Seq[String]]("wsdl2java default arguments")
+    lazy val cxfDefaultArgs = SettingKey[Seq[String]]("wsdl2java-default-arguments")
     lazy val cxfWSDLs = SettingKey[Seq[Wsdl]]("wsdl-list", "WSDLs to generate java files from")
     lazy val cxfExcludeFilter = SettingKey[PartialFunction[String, Boolean] => FileFilter]("cxf-exclude-filter")
 
-    lazy val cxfGenerate = TaskKey[Seq[File]]("run wsdl2java")
+    lazy val cxfGenerate = TaskKey[Seq[File]]("run-wsdl-to-java")
 
     case class Wsdl(key: String, file: File, args: Seq[String])
   }
@@ -50,7 +50,7 @@ object CxfPlugin extends AutoPlugin {
       Classpaths.managedJars(CXF, (classpathTypes in CXF).value, update.value)
     },
 
-    version in CXF := "3.3.3"
+    version in CXF := "3.3.4"
   ) ++
     inConfig(Compile)(settings) ++
     inConfig(Test)(settings)
@@ -74,12 +74,12 @@ object CxfPlugin extends AutoPlugin {
           }
           IO.createDirectory(basedir)
 
-          val classLoader = new URLClassLoader(Path.toURLs(classpath), getClass.getClassLoader)
+          val oldContextClassLoader = Thread.currentThread.getContextClassLoader
+
+          val classLoader = new URLClassLoader(Path.toURLs(classpath), oldContextClassLoader)
 
           val WSDLToJava = classLoader.loadClass("org.apache.cxf.tools.wsdlto.WSDLToJava")
           val ToolContext = classLoader.loadClass("org.apache.cxf.tools.common.ToolContext")
-
-          val oldContextClassLoader = Thread.currentThread.getContextClassLoader
 
           try {
             Thread.currentThread.setContextClassLoader(classLoader)

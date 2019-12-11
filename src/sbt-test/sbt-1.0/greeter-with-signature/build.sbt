@@ -6,7 +6,7 @@ version := "1.0"
 
 enablePlugins(CxfPlugin)
 
-val CxfVersion = "3.3.2"
+val CxfVersion = "3.3.4"
 
 version in CXF := CxfVersion
 
